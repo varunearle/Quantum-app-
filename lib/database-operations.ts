@@ -1,8 +1,7 @@
 import { createClient } from "@/lib/supabase/client"
-import { createClient as createServerClient } from "@/lib/supabase/server"
 import type { Portfolio, Asset, OptimizationResult } from "./types"
 
-// Client-side operations
+// Client-side operations only
 export class DatabaseOperations {
   private supabase = createClient()
 
@@ -78,44 +77,18 @@ export class DatabaseOperations {
     if (error) throw error
     return data
   }
-}
 
-// Server-side operations
-export class ServerDatabaseOperations {
-  private async getSupabase() {
-    return await createServerClient()
+  async getCurrentUser() {
+    const {
+      data: { user },
+      error,
+    } = await this.supabase.auth.getUser()
+    if (error) throw error
+    return user
   }
 
-  async getPortfoliosForUser() {
-    const supabase = await this.getSupabase()
-
-    const { data, error } = await supabase
-      .from("portfolios")
-      .select(`
-        *,
-        assets (*),
-        optimization_results (*)
-      `)
-      .order("updated_at", { ascending: false })
-
+  async signOut() {
+    const { error } = await this.supabase.auth.signOut()
     if (error) throw error
-    return data
-  }
-
-  async getPortfolioById(id: string) {
-    const supabase = await this.getSupabase()
-
-    const { data, error } = await supabase
-      .from("portfolios")
-      .select(`
-        *,
-        assets (*),
-        optimization_results (*)
-      `)
-      .eq("id", id)
-      .single()
-
-    if (error) throw error
-    return data
   }
 }
